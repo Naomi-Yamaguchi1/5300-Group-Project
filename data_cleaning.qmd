@@ -1,0 +1,147 @@
+---
+title: "Data Cleaning"
+author:
+    - name: Yuting Fan
+      affiliations:
+        - name: Georgetown University
+date: "04-05-2024"
+format:  
+  html:
+    code-fold: true
+    embed-resources: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library('tidyverse')
+
+# Load the raw data
+df <- read.csv("data/kidney_disease.csv")
+df <- df[,-1]
+head(df)
+```
+
+```{r}
+# Check the unique value 
+table(df$rbc)
+table(df$pc)
+table(df$pcc)
+table(df$ba)
+table(df$htn)
+table(df$dm)
+table(df$cad)
+table(df$appet)
+table(df$pe)
+table(df$ane)
+table(df$classification)
+```
+```{r}
+# clean "dm"
+df$dm[df$dm==" yes"] <- "yes"
+df$dm[df$dm=="\tyes"] <- "yes"
+df$dm[df$dm=="\tno"] <- "no"
+unique(df$dm)
+
+# clean "cad"
+df$cad[df$cad=="\tno"] <- "no"
+unique(df$cad)
+
+# clean "classification"
+df$classification[df$classification=="ckd\t"] <- "ckd"
+unique(df$classification)
+```
+```{r}
+# change data type
+# clean "pcv"
+table(df$pcv)
+df$pcv[df$pcv=="\t?"] <- NaN
+df$pcv[df$pcv=="\t43"] <- 43
+df$pcv <- as.double(df$pcv)
+
+# clean "wc"
+table(df$wc)
+df$wc[df$wc=="\t?"] <- NaN
+df$wc[df$wc=="\t6200"] <- 6200
+df$wc[df$wc=="\t8400"] <- 8400
+df$wc <- as.double(df$wc)
+
+# clean "rc"
+table(df$rc)
+df$rc[df$rc=="\t?"] <- NaN
+df$rc <- as.double(df$rc)
+```
+```{r}
+# deal with the missing value
+# Separate columns based on data types
+numeric_cols <- select(df, where(is.numeric))
+character_cols <- select(df, where(is.character))
+
+print(numeric_cols)
+print(character_cols)
+
+
+# numeric data(assign the mean value)
+# Function to replace missing values with mean
+for (col in names(numeric_cols)) {
+  mean_value <- round(mean(numeric_cols[[col]], na.rm=TRUE),2)
+  numeric_cols[[col]][is.na(numeric_cols[[col]])] <- mean_value
+}
+
+print(numeric_cols)
+
+
+# categorical data (assign the mode value)
+# Function to calculate mode
+getMode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+# Loop through each column
+for (col in names(character_cols)) {
+  mode_value <- getMode(character_cols[[col]])
+  character_cols[[col]][character_cols[[col]]==""] <- mode_value
+  character_cols[[col]] <- as.factor(character_cols[[col]])
+}
+
+print(character_cols)
+
+# combine the data and output the csv file
+# Combine numeric and character columns
+combined_df <- cbind(numeric_cols, character_cols)
+
+# output
+write.csv(combined_df,file="data/clean_data/clean_kidney_disease.csv")
+```
+
+```{r}
+# encode the categorical data
+# Apply label encoding to each column
+character_cols1 <- character_cols
+for (col in names(character_cols)) {
+    character_cols1[[col]] <- as.numeric(character_cols[[col]])
+}
+
+print(character_cols1)
+
+# combine the data and output the csv file
+# Combine numeric and character columns
+combined_df1 <- cbind(numeric_cols, character_cols1)
+
+# output
+write.csv(combined_df1,file="data/clean_data/formodel_clean_kidney_disease.csv")
+```
+
+
+```{r}
+# Check the missing value
+checksums <- colSums(is.na(combined_df1))
+print(checksums)
+
+# check the duplicate
+combined_df[duplicated(combined_df),]
+
+str(combined_df)
+summary(combined_df)
+```
