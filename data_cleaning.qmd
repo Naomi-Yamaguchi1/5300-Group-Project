@@ -17,7 +17,7 @@ editor_options:
 library('tidyverse')
 
 # Load the raw data
-df <- read.csv("data/kidney_disease.csv")
+df <- read.csv("data/rawdata.csv")
 df <- df[,-1]
 head(df)
 ```
@@ -34,43 +34,18 @@ table(df$cad)
 table(df$appet)
 table(df$pe)
 table(df$ane)
-table(df$classification)
+table(df$class)
 ```
 ```{r}
 # clean "dm"
-df$dm[df$dm==" yes"] <- "yes"
-df$dm[df$dm=="\tyes"] <- "yes"
 df$dm[df$dm=="\tno"] <- "no"
 unique(df$dm)
 
-# clean "cad"
-df$cad[df$cad=="\tno"] <- "no"
-unique(df$cad)
-
 # clean "classification"
-df$classification[df$classification=="ckd\t"] <- "ckd"
-unique(df$classification)
+df$class[df$class=="ckd\t"] <- "ckd"
+unique(df$class)
 ```
-```{r}
-# change data type
-# clean "pcv"
-table(df$pcv)
-df$pcv[df$pcv=="\t?"] <- NaN
-df$pcv[df$pcv=="\t43"] <- 43
-df$pcv <- as.double(df$pcv)
 
-# clean "wc"
-table(df$wc)
-df$wc[df$wc=="\t?"] <- NaN
-df$wc[df$wc=="\t6200"] <- 6200
-df$wc[df$wc=="\t8400"] <- 8400
-df$wc <- as.double(df$wc)
-
-# clean "rc"
-table(df$rc)
-df$rc[df$rc=="\t?"] <- NaN
-df$rc <- as.double(df$rc)
-```
 ```{r}
 # deal with the missing value
 # Separate columns based on data types
@@ -119,6 +94,7 @@ print(character_cols)
 combined_df <- cbind(numeric_cols, character_cols)
 
 # output
+(combined_df)
 write.csv(combined_df,file="data/clean_data/clean_kidney_disease.csv")
 ```
 
@@ -137,6 +113,7 @@ print(character_cols1)
 combined_df1 <- cbind(numeric_cols, character_cols1)
 
 # output
+(combined_df1)
 write.csv(combined_df1,file="data/clean_data/formodel_clean_kidney_disease.csv")
 ```
 

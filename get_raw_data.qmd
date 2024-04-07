@@ -1,0 +1,31 @@
+---
+title: "Get Raw Data"
+author:
+    - name: Yuting Fan
+      affiliations:
+        - name: Georgetown University
+date: "04-05-2024"
+format:  
+  html:
+    code-fold: true
+    embed-resources: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{python}
+from ucimlrepo import fetch_ucirepo 
+import pandas as pd
+
+# fetch dataset 
+chronic_kidney_disease = fetch_ucirepo(id=336) 
+  
+# data (as pandas dataframes) 
+X = chronic_kidney_disease.data.features 
+y = chronic_kidney_disease.data.targets 
+
+df = pd.concat([X, y], axis=1)
+print(df.head())
+df.to_csv("data/rawdata.csv")
+```
+
