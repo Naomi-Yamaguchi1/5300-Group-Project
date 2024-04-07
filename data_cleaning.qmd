@@ -82,6 +82,20 @@ print(character_cols)
 
 
 # numeric data(assign the mean value)
+# Function to calculate mode
+getMode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+# Function to replace missing values with mode
+nominal_columns <- c("sg", "al", "su")
+
+for (col in nominal_columns) {
+  mode_value <- getMode(numeric_cols[[col]])
+  numeric_cols[[col]][is.na(numeric_cols[[col]])] <- mode_value
+}
+
 # Function to replace missing values with mean
 for (col in names(numeric_cols)) {
   mean_value <- round(mean(numeric_cols[[col]], na.rm=TRUE),2)
@@ -90,14 +104,7 @@ for (col in names(numeric_cols)) {
 
 print(numeric_cols)
 
-
 # categorical data (assign the mode value)
-# Function to calculate mode
-getMode <- function(x) {
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-
 # Loop through each column
 for (col in names(character_cols)) {
   mode_value <- getMode(character_cols[[col]])
