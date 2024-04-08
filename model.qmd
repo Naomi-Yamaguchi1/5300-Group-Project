@@ -1,0 +1,254 @@
+---
+title: "Get Raw Data"
+author:
+    - name: Yuting Fan
+      affiliations:
+        - name: Georgetown University
+date: "04-07-2024"
+format:  
+  html:
+    code-fold: true
+    embed-resources: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+library(modeldata)
+library(leaps)
+library(caret)
+library(corrplot)
+library(ISLR) 
+require(boot)
+df <- read_csv("data/clean_data/formodel_clean_kidney_disease.csv")
+df <- df[,-1]
+(df)
+```
+# Subset selection
+```{r}
+# split the data
+set.seed(123)
+train_index <- sample(1:nrow(df), 0.8 * nrow(df))
+train <- df[train_index, ]
+test <- df[-train_index, ]
+```
+
+```{r}
+regfit.best=regsubsets(class~.,train, nvmax=25) # result are the same with method forward/backward
+reg.summary=summary(regfit.best)
+
+# Pick the best model
+print(c("SUBSET WITH MINIMUM Cp=",which.min(reg.summary$cp)))
+print(c("SUBSET WITH MINIMUM BIC=",which.min(reg.summary$bic)))
+print(c("SUBSET WITH MAXIMUM adjr2=",which.max(reg.summary$adjr2)))
+
+# the best model
+print(coef(regfit.best,9))
+print(coef(regfit.best,6))
+print(coef(regfit.best,12))
+```
+```{r}
+# cross validation
+best_model_index <- which.min(reg.summary$bic)
+
+# Extract the best subset of predictors
+best_subset <- names(coef(regfit.best, id = best_model_index))[2:7]
+
+# Define a function for cross-validation
+cross_validate <- function(model, X, y, folds) {
+  mse_scores <- numeric(length = folds)
+  for (i in 1:folds) {
+    # Create indices for training and testing sets
+    fold_indices <- createFolds(y, k = folds)
+    train_index <- unlist(fold_indices[-i])
+    test_index <- unlist(fold_indices[i])
+    
+    # Convert X back to data frame
+    X_train <- as.data.frame(X[train_index, ])
+    X_test <- as.data.frame(X[test_index, ])
+    
+    # Fit the model on training data
+    model_fit <- lm(y[train_index] ~ ., data = X_train)
+    
+    # Make predictions on test data
+    y_pred <- predict(model_fit, newdata = X_test)
+    
+    # Calculate MSE
+    mse_scores[i] <- mean((y[test_index] - y_pred)^2)
+  }
+  return(mean(mse_scores))
+}
+
+# Extract predictor variables and target variable
+X <- model.matrix(class ~ ., data = df)[, -1]
+y <- df$class
+
+# Perform cross-validation for the best subset model
+best_subset_cv_mse <- cross_validate(NULL, X[, best_subset], y, 5)
+
+cat("Best Subset Model:", best_subset, "\n")
+cat("CV MSE for Best Subset Model:", best_subset_cv_mse, "\n")
+```
+
+```{r}
+# cross validation
+best_model_index <- which.min(reg.summary$cp)
+
+# Extract the best subset of predictors
+best_subset <- names(coef(regfit.best, id = best_model_index))[2:10]
+
+# Define a function for cross-validation
+cross_validate <- function(model, X, y, folds) {
+  mse_scores <- numeric(length = folds)
+  for (i in 1:folds) {
+    # Create indices for training and testing sets
+    fold_indices <- createFolds(y, k = folds)
+    train_index <- unlist(fold_indices[-i])
+    test_index <- unlist(fold_indices[i])
+    
+    # Convert X back to data frame
+    X_train <- as.data.frame(X[train_index, ])
+    X_test <- as.data.frame(X[test_index, ])
+    
+    # Fit the model on training data
+    model_fit <- lm(y[train_index] ~ ., data = X_train)
+    
+    # Make predictions on test data
+    y_pred <- predict(model_fit, newdata = X_test)
+    
+    # Calculate MSE
+    mse_scores[i] <- mean((y[test_index] - y_pred)^2)
+  }
+  return(mean(mse_scores))
+}
+
+# Extract predictor variables and target variable
+X <- model.matrix(class ~ ., data = df)[, -1]
+y <- df$class
+
+# Perform cross-validation for the best subset model
+best_subset_cv_mse <- cross_validate(NULL, X[, best_subset], y, 5)
+
+cat("Best Subset Model:", best_subset, "\n")
+cat("CV MSE for Best Subset Model:", best_subset_cv_mse, "\n")
+```
+
+```{r}
+# cross validation
+best_model_index <- which.max(reg.summary$adjr2)
+
+# Extract the best subset of predictors
+best_subset <- names(coef(regfit.best, id = best_model_index))[2:13]
+
+# Define a function for cross-validation
+cross_validate <- function(model, X, y, folds) {
+  mse_scores <- numeric(length = folds)
+  for (i in 1:folds) {
+    # Create indices for training and testing sets
+    fold_indices <- createFolds(y, k = folds)
+    train_index <- unlist(fold_indices[-i])
+    test_index <- unlist(fold_indices[i])
+    
+    # Convert X back to data frame
+    X_train <- as.data.frame(X[train_index, ])
+    X_test <- as.data.frame(X[test_index, ])
+    
+    # Fit the model on training data
+    model_fit <- lm(y[train_index] ~ ., data = X_train)
+    
+    # Make predictions on test data
+    y_pred <- predict(model_fit, newdata = X_test)
+    
+    # Calculate MSE
+    mse_scores[i] <- mean((y[test_index] - y_pred)^2)
+  }
+  return(mean(mse_scores))
+}
+
+# Extract predictor variables and target variable
+X <- model.matrix(class ~ ., data = df)[, -1]
+y <- df$class
+
+# Perform cross-validation for the best subset model
+best_subset_cv_mse <- cross_validate(NULL, X[, best_subset], y, 5)
+
+cat("Best Subset Model:", best_subset, "\n")
+cat("CV MSE for Best Subset Model:", best_subset_cv_mse, "\n")
+```
+
+**Best Subset Model: sg al bu hemo htn dm** 
+
+# Classification
+```{r,warning=FALSE}
+# select the best data
+best <- df[, c('sg', 'al', 'bu', 'hemo', 'htn', 'dm', 'class')]
+
+# split training and test set
+set.seed(123)
+index <- createDataPartition(y = best$class, p = 0.8, list = F)
+train <- best[index, ]
+test <- best[-index, ]
+```
+
+## Logistic regression method
+```{r,warning=FALSE}
+# Define the train control with ten-fold cross-validation
+ctrl <- trainControl(method = "cv", number = 10)
+
+# part a: Logistic regression method
+model_lr <- train(class ~., data=train, methods="glm", family="binomial", trControl=ctrl)
+
+predict_lr <- predict(model_lr, newdata=test, type="raw")
+
+# part b: LDA method
+model_lda <- train(class ~., data=train, methods="lda", trControl=ctrl)
+
+predict_lda <- predict(model_lda, newdata=test, type="raw")
+
+# part c: QDA method
+model_qda <- train(class ~., data=train, methods="qda", trControl=ctrl)
+
+predict_qda <- predict(model_qda, newdata=test, type="raw")
+
+library(pROC)
+# Create ROC curves
+roc_lr <- roc(test$class, predict_lr)
+roc_lda <- roc(test$class, predict_lda)
+roc_qda <- roc(test$class, predict_qda)
+
+# Plot ROC curves
+plot(roc_lr, col = "yellow", main = "ROC Curves for Classification Methods")
+lines(roc_lda, col = "red")
+lines(roc_qda, col = "green")
+legend("bottomright", legend = c("Logistic Regression", "LDA", "QDA"), col = c("yellow", "red", "green"), lty = 1)
+
+# Calculate AUC
+auc_lr <- auc(roc_lr)
+auc_lda <- auc(roc_lda)
+auc_qda <- auc(roc_qda)
+
+cat("Logistic Regression AUC:", auc_lr, "\n")
+cat("LDA AUC:", auc_lda, "\n")
+cat("QDA AUC:", auc_qda, "\n")
+```
+
+## SVM
+```{r,warning=FALSE}
+# part d: SVM method
+model_svm <- train(class ~., data=train, methods="svm", trControl=ctrl)
+predict_svm <- predict(model_svm, newdata=test, type="raw")
+roc_svm <- roc(test$class, predict_svm)
+auc_svm <- auc(roc_svm)
+cat("SVM AUC:", auc_svm, "\n")
+```
+
+## ANN
+```{r,warning=FALSE}
+# part c: ANN method
+model_nn <- train(class ~., data=train, methods="nnet", trControl=ctrl)
+predict_nn <- predict(model_nn, newdata=test, type="raw")
+roc_nn <- roc(test$class, predict_nn)
+auc_nn <- auc(roc_nn)
+cat("SVM AUC:", auc_nn, "\n")
+```
