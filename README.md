@@ -35,7 +35,6 @@ Restart the kernel and import the module `ucimlrepo`.
     print(heart_disease.variables)
 
 
-
 ## `fetch_ucirepo`
 Loads a dataset from the UCI ML Repository, including the dataframes and metadata information.
 
@@ -111,3 +110,4 @@ none
 - [UCI Machine Learning Repository home page](https://archive.ics.uci.edu/)
 - [PyPi repository for this package](https://pypi.org/project/ucimlrepo)
 - [Submit an issue](https://github.com/uci-ml-repo/ucimlrepo-feedback/issues)
+- [Data Sources](https://archive.ics.uci.edu/dataset/336/chronic+kidney+disease)
