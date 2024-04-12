@@ -1,0 +1,129 @@
+---
+title: "Exploratory Data Analysis"
+author:
+    - name: Naomi Yamaguchi
+      affiliations:
+        - name: Georgetown University
+date: "04-12-2024"
+format:  
+  html:
+    code-fold: true
+    embed-resources: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+```{r}
+library('tidyverse')
+library(ggplot2)
+library(corrplot)
+```
+
+```{r}
+kidney_data <- read_csv("data/clean_data/clean_kidney_disease.csv")
+
+#basic info
+head(kidney_data)
+
+str(kidney_data)
+
+summary(kidney_data)
+```
+
+
+```{r}
+#histogram of Age
+ggplot(kidney_data, aes(x = age)) + 
+    geom_histogram(bins = 15, fill = "#ADD8E6", color = "black") + 
+    labs(title = "Distribution of Age", x = "Age", y = "Frequency") +
+    theme_minimal(base_size = 14) +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", color = "#333333"),  
+        plot.background = element_rect(fill = "#f0f0f0", color = NA), 
+        panel.background = element_rect(fill = "#ffffff", color = NA), 
+        panel.grid.major = element_line(color = "#dddddd", size = 0.5), 
+        panel.grid.minor = element_blank(), 
+        axis.title = element_text(color = "#333333"), 
+        axis.text = element_text(color = "#333333")
+    )
+```
+
+
+```{r}
+#boxplot for Age against CKD status
+ggplot(kidney_data, aes(x = class, y = age, fill = class)) + 
+    geom_boxplot(outlier.color = "black", outlier.shape = 16) + 
+    scale_fill_manual(values = c("ckd" = "#ADD8E6", "notckd" = "#B0C4DE")) +
+    labs(title = "Age Distribution by CKD Status", x = "CKD Status", y = "Age") +
+    theme_minimal(base_size = 14) +  
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", color = "#333333"),  
+        plot.background = element_rect(fill = "#f0f0f0", color = NA), 
+        panel.background = element_rect(fill = "#ffffff", color = NA),
+        panel.grid.major = element_line(color = "#dddddd", size = 0.5),  
+        panel.grid.minor = element_blank(),  
+        axis.title = element_text(color = "#333333"), 
+        axis.text = element_text(color = "#333333")
+    )
+```
+
+```{r}
+#correlations among numeric variables
+numeric_vars <- kidney_data[, sapply(kidney_data, is.numeric)]
+cor_matrix <- cor(numeric_vars, use = "complete.obs")
+
+corrplot(cor_matrix, method = "circle")
+```
+
+```{r}
+# Bar plot for hypertension status across CKD class
+ggplot(kidney_data, aes(x = htn, fill = class)) + 
+    geom_bar(position = "dodge") +
+    scale_fill_manual(values = c("#ADD8E6", "#B0C4DE")) +
+    labs(title = "CKD Status by Hypertension", x = "Hypertension Status", y = "Count") +
+    theme_minimal(base_size = 14) +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", color = "#333333"),
+        plot.background = element_rect(fill = "#f0f0f0", color = NA),
+        panel.background = element_rect(fill = "#ffffff", color = NA),
+        panel.grid.major = element_line(color = "#dddddd", size = 0.5),
+        panel.grid.minor = element_blank(),
+        axis.title = element_text(color = "#333333"),
+        axis.text = element_text(color = "#333333"),
+        legend.position = "bottom"  # Adjust legend position if necessary
+    )
+```
+
+```{r}
+# Boxplot for Hemoglobin levels by Diabetes status
+ggplot(kidney_data, aes(x = dm, y = hemo, fill = dm)) + 
+    geom_boxplot() +
+    scale_fill_manual(values = c("#ADD8E6", "#B0C4DE")) +
+    labs(title = "Hemoglobin Levels by Diabetes Status", x = "Diabetes Status", y = "Hemoglobin (g/dL)") +
+    theme_minimal(base_size = 14) +
+    theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", color = "#333333"),
+        plot.background = element_rect(fill = "#f0f0f0", color = NA),
+        panel.background = element_rect(fill = "#ffffff", color = NA),
+        panel.grid.major = element_line(color = "#dddddd", size = 0.5),
+        panel.grid.minor = element_blank(),
+        axis.title = element_text(color = "#333333"),
+        axis.text = element_text(color = "#333333"),
+        legend.position = "bottom"  # Adjust legend position if necessary
+    )
+
+```
+
+```{r}
+#frequencies for categorical variables
+cat("Table for HTN")
+table(kidney_data$htn)
+
+cat("\n", "Table for DM")
+table(kidney_data$dm)
+
+cat("\n", "Table for Class")
+table(kidney_data$class)
+```
+
