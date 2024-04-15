@@ -1,0 +1,125 @@
+---
+title: "Exploratory Data Analysis Part 2"
+author:
+    - name: Samantha Moon
+      affiliations:
+        - name: Georgetown University
+date: "04-14-2024"
+format:  
+  html:
+    code-fold: true
+    embed-resources: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library('tidyverse')
+library(ggplot2)
+library(corrplot)
+library(tidyr)
+```
+
+```{r}
+kidney_data <- read_csv("data/clean_data/clean_kidney_disease.csv")
+
+head(kidney_data)
+```
+
+
+```{r}
+kidney_long <- pivot_longer(kidney_data, cols = c("htn", "dm", "ane", "cad"), 
+                            names_to = "Condition", values_to = "Status")
+
+ggplot(kidney_long, aes(x = hemo, y = pcv, color = Status)) +
+  geom_point(alpha = 0.6) +  
+  facet_wrap(~Condition, scales = "free", labeller = labeller(Condition = c(cad = "Coronary Artery Disease",
+                                                                            ane = "Anemia",
+                                                                            dm = "Diabetes Mellitus",
+                                                                            htn = "Hypertension"))) +
+  labs(x = "Hemoglobin", y = "Packed Cell Volume", color = "Status", 
+       title = "Hemoglobin vs. Packed Cell Volume by Condition") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", color = "#333333"),
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),
+    panel.background = element_rect(fill = "#ffffff", color = NA),
+    panel.grid.major = element_line(color = "#dddddd", size = 0.5),
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(color = "#333333"),
+    axis.text = element_text(color = "#333333"),
+    legend.position = "right" 
+  ) +
+  scale_color_manual(values = c("#B0C4DE", "navy")) 
+```
+
+```{r}
+ggplot(kidney_long, aes(x = bp, y = age, color = Status)) +
+  geom_point(alpha = 0.8) +  
+  facet_wrap(~Condition, scales = "free", labeller = labeller(Condition = c(cad = "Coronary Artery Disease",
+                                                                            ane = "Anemia",
+                                                                            dm = "Diabetes Mellitus",
+                                                                            htn = "Hypertension"))) +
+  labs(x = "Blood Pressure (mm Hg)", y = "Age (years)", color = "Condition Status", 
+       title = "Blood Pressure vs. Age by Condition") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", color = "#333333"),
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),
+    panel.background = element_rect(fill = "#ffffff", color = NA),
+    panel.grid.major = element_line(color = "#dddddd", size = 0.5),
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(color = "#333333"),
+    axis.text = element_text(color = "#333333"),
+    legend.position = "right"  
+  ) +
+  scale_color_manual(values = c("#B0C4DE", "navy"))
+
+```
+
+
+
+
+```{r}
+ggplot(kidney_data, aes(x = bgr, y = hemo, color = class)) +
+  geom_point(alpha = 0.9) + 
+  labs(x = "Blood Glucose Random (mg/dL)", y = "Hemoglobin (gms)", 
+       title = "BGR vs Hemoglobin") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", color = "#333333"),
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),
+    panel.background = element_rect(fill = "#ffffff", color = NA),
+    panel.grid.major = element_line(color = "#dddddd", size = 0.5),
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(color = "#333333"),
+    axis.text = element_text(color = "#333333"),
+    legend.position = "bottom"  
+  ) +
+  scale_color_manual(values = c("#B0C4DE", "navy"))
+```
+
+```{r}
+ckd_data <- kidney_data %>%
+  filter(class == "ckd")
+
+ckd_long <- pivot_longer(ckd_data, cols = c("cad", "ane", "dm", "htn"), 
+                         names_to = "Condition", values_to = "Status")
+
+ggplot(ckd_long, aes(x = Condition, fill = Status)) +
+  geom_bar(position = "dodge", alpha = 1) +
+  labs(x = "Condition", y = "Count", title = "Presence of Conditions Among CKD Patients") +
+  scale_x_discrete(labels = c(cad = "Coronary Artery Disease", ane = "Anemia", dm = "Diabetes Mellitus", htn = "Hypertension")) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", color = "#333333"),
+    plot.background = element_rect(fill = "#f0f0f0", color = NA),
+    panel.background = element_rect(fill = "#ffffff", color = NA),
+    panel.grid.major = element_line(color = "#dddddd", size = 0.5),
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(color = "#333333"),
+    axis.text = element_text(color = "#333333", angle = 45, hjust = 1),
+    legend.position = "right" 
+  ) +
+  scale_fill_manual(values = c("#ADD8E6", "#B0C4DE"))
+```
